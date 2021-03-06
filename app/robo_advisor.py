@@ -24,9 +24,17 @@ now = datetime.now()
 current_datetime = now.strftime("%m-%d-%Y %I:%M %p")
 
 # get latest close
-latest_close = parsed_response["Time Series (5min)"]["2021-03-05 19:55:00"]["4. close"]
-# to_usd(float(latest_close))
+ts = parsed_response["Time Series (5min)"]
+dates = list(ts.keys()) #TODO sort to ensure latest day is first
+latest_day = dates[0]
+latest_close = ts[latest_day]["4. close"]
 
+# get recent close (max of all high prices)
+high_prices = []
+for date in dates:
+    high_price = ts[date]["2. high"]
+    high_prices.append(float(high_price))
+recent_high = max(high_prices)
 
 # INFO OUTPUTS
 
@@ -38,7 +46,7 @@ print(f"REQUEST AT: {current_datetime}")
 print(line)
 print(f"LATEST DAY: {last_refreshed}")
 print(f"LATEST CLOSE: {to_usd(float(latest_close))}")
-print("RECENT HIGH: $")
+print(f"RECENT HIGH: {to_usd(float(recent_high))}")
 print("RECENT LOW: $")
 print(line)
 print("RECOMMENDATION: BUY!")
