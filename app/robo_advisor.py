@@ -11,19 +11,7 @@ line = "------------------------"
 def to_usd(my_price):
     return f"${my_price:,.2f}"
 
-# INFO INPUTS
-while True:
-    ticker = input("Please input a stock or cryptocurrency symbol: ")
-    # break loop if user input is 'DONE'
-    if selected_id.upper() == "DONE":
-        break
-    # validate other entries
-    else:
-        if selected_id not in valid_ids:
-            print("Sorry, the product identifier you have entered is not valid. Please try again.")
-        else:
-            # add selected id to list if valid
-            selected_ids.append(selected_id)
+
 
 
 
@@ -63,18 +51,26 @@ recent_low = min(low_prices)
 
 # csv file writing
 csv_file_path = os.path.join(os.path.dirname(__file__), "..", "data", "prices.csv")
-csv_headers = ["city", "name"]
+csv_headers = ["timestamp", "open", "high", "low", "close", "volume"]
 
-with open(csv_file_path, "W") as csv_file:
-    writer = csv.DictWriter(csv_file, filednames=csv_headers)
+with open(csv_file_path, "w") as csv_file:
+    writer = csv.DictWriter(csv_file, fieldnames=csv_headers)
     writer.writeheader()
-
-    writer.writerow({"city": "New York", "name": "Yankees"})
+    for date in dates:
+        prices = ts[date]
+        writer.writerow({
+            "timestamp": date,
+            "open": prices["1. open"],
+            "high": prices["2. high"], 
+            "low": prices["3. low"], 
+            "close": prices["4. close"], 
+            "volume": prices["5. volume"]
+        })
 
 # INFO OUTPUTS
 
 print(line)
-print(f"SELECTED SYMBOL: {ticker}")
+#print(f"SELECTED SYMBOL: {ticker}")
 print(line)
 print("REQUESTING STOCK MARKET DATA...")
 print(f"REQUEST AT: {current_datetime}")
