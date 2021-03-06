@@ -16,6 +16,19 @@ def to_usd(my_price):
 
 
 # INFO INPUTS
+while True:
+    selected_id = input("Please input a product identifier or 'DONE' if there are no more items (1-20):")
+    # break loop if user input is 'DONE'
+    if selected_id.upper() == "DONE":
+        break
+    # validate other entries
+    else:
+        if selected_id not in valid_ids:
+            print("Sorry, the product identifier you have entered is not valid. Please try again.")
+        else:
+            # add selected id to list if valid
+            selected_ids.append(selected_id)
+
 
 api_key = os.environ.get("ALPHAVANTAGE_API_KEY")
 ticker = "IBM"
