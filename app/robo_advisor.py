@@ -2,8 +2,10 @@ import csv
 import json
 import os
 
+from dotenv import load_dotenv
 import requests
 
+load_dotenv()
 
 line = "------------------------"
 
@@ -13,9 +15,11 @@ def to_usd(my_price):
 
 
 
+# INFO INPUTS
 
-
-request_url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=demo"
+api_key = os.environ.get("ALPHAVANTAGE_API_KEY")
+ticker = "IBM"
+request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={ticker}&interval=5min&apikey={api_key}"
 response = requests.get(request_url)
 
 
@@ -70,7 +74,7 @@ with open(csv_file_path, "w") as csv_file:
 # INFO OUTPUTS
 
 print(line)
-#print(f"SELECTED SYMBOL: {ticker}")
+print(f"SELECTED SYMBOL: {ticker}")
 print(line)
 print("REQUESTING STOCK MARKET DATA...")
 print(f"REQUEST AT: {current_datetime}")
