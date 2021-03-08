@@ -83,12 +83,12 @@ for ticker in selected_tickers:
                 "volume": prices["5. volume"]
             })
 
-    if ts[latest_day]["1. open"] < latest_close:
+    if float(latest_close) < (float(recent_low) * 1.2): # if latest close is less than 1.2x recent low
         recommendation = "BUY"
-        recommendation_explanation = "THE STOCK'S OPENING PRICE IS LOWER THAN THE LATEST CLOSING PRICE."
+        recommendation_explanation = "THE STOCK'S LATEST CLOSE IS LESS THAN 20% ABOVE THE RECENT LOW."
     else:
         recommendation = "DO NOT BUY"
-        recommendation_explanation = "THE STOCK'S OPENING PRICE IS HIGHER THAN THE LATEST CLOSING PRICE."
+        recommendation_explanation = "THE STOCK PRICE IS TOO EXPENSIVE."
 
     # INFO OUTPUTS
     print(line)
