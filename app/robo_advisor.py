@@ -7,101 +7,107 @@ import requests
 
 load_dotenv()
 
+# initialize variables
 line = "------------------------"
+selected_tickers = []
+high_prices = []
+low_prices = []
 
 # function to convert float or integer to usd-formatted string
 def to_usd(my_price):
     return f"${my_price:,.2f}"
 
-
-
 # INFO INPUTS
 while True:
-    selected_id = input("Please input a product identifier or 'DONE' if there are no more items (1-20):")
+    ticker = input("Please input a stock or cryptocurrency symbol one at a time or type DONE: ")
     # break loop if user input is 'DONE'
-    if selected_id.upper() == "DONE":
+    if ticker.upper() == "DONE":
         break
     # validate other entries
     else:
-        if selected_id not in valid_ids:
-            print("Sorry, the product identifier you have entered is not valid. Please try again.")
+        if ticker.isalpha() == False or len(str(ticker)) > 5:
+                print("Sorry, couldn't find any trading data for that stock symbol. Make sure that the ticker only contains letters and is a valid length. Please try again.")
         else:
-            # add selected id to list if valid
-            selected_ids.append(selected_id)
+            # add selected ticker to list if valid
+            selected_tickers.append(ticker)
 
-
-api_key = os.environ.get("ALPHAVANTAGE_API_KEY")
-ticker = "IBM"
-request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={ticker}&interval=5min&apikey={api_key}"
-response = requests.get(request_url)
-
-
-parsed_response = json.loads(response.text)
-
-# get last refreshed date and time
-last_refreshed = parsed_response["Meta Data"]["3. Last Refreshed"]
 
 # get current request time and date
 from datetime import datetime
 now = datetime.now()
 current_datetime = now.strftime("%m-%d-%Y %I:%M %p")
 
-# get latest close
-ts = parsed_response["Time Series (5min)"]
-dates = list(ts.keys()) #TODO sort to ensure latest day is first
-latest_day = dates[0]
-latest_close = ts[latest_day]["4. close"]
+for ticker in selected_tickers:
+    api_key = os.environ.get("ALPHAVANTAGE_API_KEY")
+    ticker = ticker.upper()
+    request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={ticker}&interval=5min&apikey={api_key}"
+    response = requests.get(request_url)
 
-# get recent close (max of all high prices)
-high_prices = []
-low_prices = []
+    parsed_response = json.loads(response.text)
 
-for date in dates:
-    high_price = ts[date]["2. high"]
-    high_prices.append(float(high_price))
-    low_price = ts[date]["3. low"]
-    low_prices.append(float(low_price))
-recent_high = max(high_prices)
-recent_low = min(low_prices)
+    # get last refreshed date and time
+    last_refreshed = parsed_response["Meta Data"]["3. Last Refreshed"]
 
+    # get latest close
+    ts = parsed_response["Time Series (5min)"]
+    dates = list(ts.keys()) #TODO sort to ensure latest day is first
+    latest_day = dates[0]
+    latest_close = ts[latest_day]["4. close"]
 
+    # get recent close (max of all high prices)
 
-# csv file writing
-csv_file_path = os.path.join(os.path.dirname(__file__), "..", "data", "prices.csv")
-csv_headers = ["timestamp", "open", "high", "low", "close", "volume"]
-
-with open(csv_file_path, "w") as csv_file:
-    writer = csv.DictWriter(csv_file, fieldnames=csv_headers)
-    writer.writeheader()
     for date in dates:
-        prices = ts[date]
-        writer.writerow({
-            "timestamp": date,
-            "open": prices["1. open"],
-            "high": prices["2. high"], 
-            "low": prices["3. low"], 
-            "close": prices["4. close"], 
-            "volume": prices["5. volume"]
-        })
+        high_price = ts[date]["2. high"]
+        high_prices.append(float(high_price))
+        low_price = ts[date]["3. low"]
+        low_prices.append(float(low_price))
+    
+    recent_high = max(high_prices)
+    recent_low = min(low_prices)
 
-# INFO OUTPUTS
+    # csv file writing
+    csv_file_path = os.path.join(os.path.dirname(__file__), "..", "data", f"prices.{ticker}.csv")
+    csv_headers = ["timestamp", "open", "high", "low", "close", "volume"]
 
-print(line)
-print(f"SELECTED SYMBOL: {ticker}")
-print(line)
-print("REQUESTING STOCK MARKET DATA...")
-print(f"REQUEST AT: {current_datetime}")
-print(line)
-print(f"LATEST DAY: {last_refreshed}")
-print(f"LATEST CLOSE: {to_usd(float(latest_close))}")
-print(f"RECENT HIGH: {to_usd(float(recent_high))}")
-print(f"RECENT LOW: {to_usd(float(recent_low))}")
-print(line)
-print("RECOMMENDATION: BUY!")
-print("BECAUSE: TODO")
-print(line)
-print(f"WRITING DATA TO CSV: {csv_file_path}...")
-print(line)
-print("HAPPY INVESTING!")
-print(line)
+    with open(csv_file_path, "w") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=csv_headers)
+        writer.writeheader()
+        for date in dates:
+            prices = ts[date]
+            writer.writerow({
+                "timestamp": date,
+                "open": prices["1. open"],
+                "high": prices["2. high"], 
+                "low": prices["3. low"], 
+                "close": prices["4. close"], 
+                "volume": prices["5. volume"]
+            })
+
+    if ts[latest_day]["1. open"] < latest_close:
+        recommendation = "BUY"
+        recommendation_explanation = "THE STOCK'S OPENING PRICE IS LOWER THAN THE LATEST CLOSING PRICE."
+    else:
+        recommendation = "DO NOT BUY"
+        recommendation_explanation = "THE STOCK'S OPENING PRICE IS HIGHER THAN THE LATEST CLOSING PRICE."
+
+    # INFO OUTPUTS
+    print(line)
+    print(f"SELECTED SYMBOL: {ticker}")
+    print(line)
+    print("REQUESTING STOCK MARKET DATA...")
+    print(f"REQUEST AT: {current_datetime}")
+    print(line)
+    print(f"LATEST DAY: {last_refreshed}")
+    print(f"LATEST CLOSE: {to_usd(float(latest_close))}")
+    print(f"RECENT HIGH: {to_usd(float(recent_high))}")
+    print(f"RECENT LOW: {to_usd(float(recent_low))}")
+    print(line)
+    print(f"RECOMMENDATION: {recommendation}!")
+    print(f"BECAUSE: {recommendation_explanation}")
+    print(line)
+    print(f"WRITING DATA TO CSV: {csv_file_path}...")
+    print(line)
+    print("HAPPY INVESTING!")
+    print(line)
+
 
